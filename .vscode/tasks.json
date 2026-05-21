@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "unifymemfile: Save Context",
+      "type": "shell",
+      "command": "unifymemfile",
+      "args": ["save", "--project-root", "${workspaceFolder}"],
+      "problemMatcher": [],
+      "group": "none"
+    }
+  ]
+}

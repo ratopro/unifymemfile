@@ -1,0 +1,37 @@
+{
+  "name": "unifymemfile",
+  "displayName": "unifymemfile",
+  "description": "Persist and share project context across IDEs",
+  "version": "1.0.0",
+  "publisher": "unifymemfile",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "activationEvents": ["onCommand:unifymemfile.saveContext"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "unifymemfile.saveContext",
+        "title": "Save Context to .context.md",
+        "category": "unifymemfile"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "unifymemfile.saveContext",
+        "key": "ctrl+alt+s",
+        "mac": "cmd+alt+s",
+        "when": "editorTextFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "vsce": "^2.15.0"
+  }
+}

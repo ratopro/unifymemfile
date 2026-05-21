@@ -1,0 +1,8 @@
+[
+  {
+    "key": "ctrl+alt+s",
+    "command": "workbench.action.tasks.runTask",
+    "args": "unifymemfile: Save Context",
+    "when": "editorTextFocus"
+  }
+]

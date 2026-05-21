@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "unifymemfile": {
+      "command": "node",
+      "args": ["/home/rafa/sistema/unifymemfile/dist/index.js"]
+    }
+  }
+}
