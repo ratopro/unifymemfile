@@ -2,7 +2,7 @@
 
 MCP server + CLI for persisting and sharing project context across IDEs and agents via `.context.md`.
 
-[**Español**](README.es.md)
+[**Español**](README-es.md)
 
 When working on a project across multiple IDEs (VS Code, Cursor, Gemini CLI, etc.), each session's context is saved to a `.context.md` file. When another IDE or agent opens the project, it can read this file and know everything that has been done.
 
