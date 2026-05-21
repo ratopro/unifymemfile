@@ -6,12 +6,29 @@ When working on a project across multiple IDEs (VS Code, Cursor, Gemini CLI, etc
 
 Sessions are stored in reverse chronological order (newest first), preventing context loss between sessions and IDE switches.
 
-## Quick Start
+## Quick Install (One Command)
 
 ```bash
-npm install -g /path/to/unifymemfile
-unifymemfile init
-unifymemfile save --summary "Working on feature X"
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash
+```
+
+This will:
+1. Download the repository
+2. Install dependencies
+3. Build the project
+4. Run the interactive installer
+
+---
+
+## Manual Installation
+
+### From source
+
+```bash
+cd /path/to/unifymemfile
+npm install
+npm run build
+npm link  # makes `unifymemfile` available globally
 ```
 
 ## CLI Commands
@@ -107,17 +124,9 @@ npm install
 
 ### Gemini CLI
 
-Add to `~/.gemini/antigravity/mcp_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "unifymemfile": {
-      "command": "node",
-      "args": ["/absolute/path/to/unifymemfile/dist/index.js"]
-    }
-  }
-}
+```bash
+gemini mcp add unifymemfile node /path/to/unifymemfile/dist/index.js
+gemini mcp list  # Verify it shows as Connected
 ```
 
 Restart Gemini CLI. The tools `save_context`, `read_context`, `get_context_status`, and `append_context_note` will be available.
