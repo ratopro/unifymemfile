@@ -140,6 +140,17 @@ Igual que Gemini CLI - usa lenguaje natural:
 "Leer el contexto del proyecto para entender el estado actual"
 ```
 
+### Frases Coloquiales
+
+Úsalas tal como las escribirías naturalmente:
+
+| Acción | Frases populares |
+|--------|------------------|
+| **Guardar contexto** | "guarda lo que hemos hecho", "anota el progreso", "salva el contexto", "actualiza lo que vamos haciendo", "no pierdas lo que llevamos" |
+| **Leer contexto** | "qué hemos hecho?", "dame el resumen", "qué tal vamos?", "cómo estamos?", "qué se ha hecho?", "recuerda qué hacíamos", "qué había hasta ahora?" |
+| **Añadir nota** | "apunta esto", "no se me olvide", "recuerda que", "hay que tener en cuenta", "tomar nota de", "pon una marca aquí" |
+| **Ver estado** | "qué hay?", "cómo va el tema?", "qué tenemos?", "cuéntame el estado", "qué hay guardado?" |
+
 ---
 
 ## Formato `.context.md`

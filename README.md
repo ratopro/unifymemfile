@@ -140,6 +140,17 @@ Same as Gemini CLI - use natural language:
 "Read the project context to understand current state"
 ```
 
+### Colloquial Phrases
+
+Use them as you would naturally say them:
+
+| Action | Popular phrases |
+|--------|-----------------|
+| **Save context** | "save what we've done", "note our progress", "don't lose what we got", "update where we're at", "record where we're at" |
+| **Read context** | "what have we done?", "give me the summary", "where are we?", "what's the status?", "catch me up", "remind me what we were doing" |
+| **Add note** | "note this down", "don't forget", "remember that", "keep in mind", "take a note", "mark this" |
+| **Check status** | "what's there?", "how's it going?", "what do we have?", "tell me the status", "what's saved?" |
+
 ---
 
 ## `.context.md` Format
