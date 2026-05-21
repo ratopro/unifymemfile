@@ -14,11 +14,22 @@ Las sesiones se almacenan en orden cronológico inverso (la más reciente primer
 curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash
 ```
 
-Esto:
-1. Descargará el repositorio
-2. Instalará las dependencias
-3. Compilará el proyecto
-4. Ejecutará el instalador interactivo
+Esto instalará MCP server y skill de Antigravity por defecto.
+
+### Opciones de Instalación
+
+| Opción | Descripción |
+|--------|-------------|
+| `--mcp` | Instalar solo servidor MCP |
+| `--skill` | Instalar solo skill de Antigravity |
+| `--both` | Instalar ambos MCP y skill (por defecto) |
+| `--uninstall` | Desinstalar |
+
+Ejemplos:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --mcp
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --skill
+```
 
 ---
 

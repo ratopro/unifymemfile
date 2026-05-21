@@ -14,11 +14,22 @@ Sessions are stored in reverse chronological order (newest first), preventing co
 curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash
 ```
 
-This will:
-1. Download the repository
-2. Install dependencies
-3. Build the project
-4. Run the interactive installer
+This will install both MCP server and Antigravity skill by default.
+
+### Install Options
+
+| Option | Description |
+|--------|-------------|
+| `--mcp` | Install MCP server only |
+| `--skill` | Install Antigravity skill only |
+| `--both` | Install both MCP and skill (default) |
+| `--uninstall` | Remove installation |
+
+Examples:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --mcp
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --skill
+```
 
 ---
 
