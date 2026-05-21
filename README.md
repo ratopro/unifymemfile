@@ -1,27 +1,39 @@
 # unifymemfile
 
-MCP server + CLI for persisting and sharing project context across IDEs via `.context.md`.
+MCP server + CLI for persisting and sharing project context across IDEs and agents via `.context.md`.
 
-## MCP Tools
+When working on a project across multiple IDEs (VS Code, Cursor, Gemini CLI, etc.), each session's context is saved to a `.context.md` file. When another IDE or agent opens the project, it can read this file and know everything that has been done.
 
-- `save_context` — Save/update context fields in `.context.md`
-- `read_context` — Read all context data
-- `get_context_status` — Check if `.context.md` exists, size, last modified
-- `append_context_note` — Append a note to the Notes section
+Sessions are stored in reverse chronological order (newest first), preventing context loss between sessions and IDE switches.
 
-## CLI
+## Quick Start
 
 ```bash
-unifymemfile save --summary "..." --recent-changes "..."
+npm install -g /path/to/unifymemfile
+unifymemfile init
+unifymemfile save --summary "Working on feature X"
+```
+
+## CLI Commands
+
+```bash
+unifymemfile save --summary "..." --open-tasks "..." --recent-changes "..."
 unifymemfile read
 unifymemfile status
-unifymemfile note "user note text"
+unifymemfile note "User note here"
 unifymemfile init
 ```
 
-## `.context.md` Format
+## MCP Tools
 
-Sessions are stored in reverse chronological order (newest first).
+| Tool | Description |
+|------|-------------|
+| `save_context` | Save/update context fields in `.context.md` |
+| `read_context` | Read all context data |
+| `get_context_status` | Check if `.context.md` exists, size, sessions count |
+| `append_context_note` | Append a note to the current session |
+
+## `.context.md` Format
 
 ```md
 # Project Context
@@ -30,23 +42,23 @@ Sessions are stored in reverse chronological order (newest first).
 
 ### Summary
 
-Project setup complete
+Working on MCP server integration
 
 ### Current State
 
-Building the MCP server
+Building the context persistence layer
 
 ### Recent Changes
 
-Added context persistence
+Added session-based storage
 
 ### Decisions
 
-Using TypeScript
+Using TypeScript for type safety
 
 ### Open Tasks
 
-Write tests
+Write tests for the CLI
 
 ### Known Issues
 
@@ -54,94 +66,48 @@ None
 
 ### Notes
 
-User notes here
+- [2026-05-21-13:07] User note here
 
 ---
 
-## Session 2026-05-20
+## Session 2026-05-20-10:30
 
 ### Summary
 
-Initial commit
-
+Initial project setup
 ...
 ```
 
-## IDE Integration
+**Session key format:** `YYYY-MM-DD-HH:MM` — duplicates within the same hour are merged into a single session.
+
+## Installation
+
+### From source
+
+```bash
+cd /path/to/unifymemfile
+npm install
+npm run build
+npm link  # makes `unifymemfile` available globally
+```
 
 ### VS Code / Cursor / Windsurf
 
-Create a `.vscode/tasks.json` with a task that runs the CLI, or use a keybinding:
+**Option A — Tasks + Keybinding (no extension install needed):**
 
-```json
-{
-  "tasks": [
-    {
-      "label": "Save Context",
-      "type": "shell",
-      "command": "unifymemfile",
-      "args": ["save", "--summary", "${input:contextSummary}"],
-      "problemMatcher": []
-    }
-  ]
-}
-```
+Copy `.vscode/tasks.json` and `.vscode/keybindings.json` into your project's `.vscode/` folder. Press `Ctrl+Alt+S` to save context.
 
-Or bind a key in `keybindings.json`:
-
-```json
-{
-  "key": "ctrl+alt+s",
-  "command": "workbench.action.tasks.runTask",
-  "args": "Save Context"
-}
-```
-
-## VS Code Extension
-
-The extension in `vscode-extension/` provides `Ctrl+Alt+S` to save context directly.
+**Option B — VS Code Extension:**
 
 ```bash
 cd vscode-extension
 npm install
-# Install from local .vsix for development:
-code --install-extension unifymemfile-*.vsix
+# Build .vsix and install manually
 ```
 
-Or use the built-in task + keybinding approach (no extension install needed):
+### Gemini CLI
 
-**`.vscode/tasks.json`** — Task definition:
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "unifymemfile: Save Context",
-      "type": "shell",
-      "command": "unifymemfile",
-      "args": ["save", "--project-root", "${workspaceFolder}"],
-      "problemMatcher": [],
-      "group": "none"
-    }
-  ]
-}
-```
-
-**`.vscode/keybindings.json`** — Keybinding:
-```json
-[
-  {
-    "key": "ctrl+alt+s",
-    "command": "workbench.action.tasks.runTask",
-    "args": "unifymemfile: Save Context",
-    "when": "editorTextFocus"
-  }
-]
-```
-
-## Gemini CLI
-
-Add to your Gemini CLI MCP config (`~/.gemini/antigravity/mcp_config.json` or equivalent):
+Add to `~/.gemini/antigravity/mcp_config.json`:
 
 ```json
 {
@@ -154,23 +120,7 @@ Add to your Gemini CLI MCP config (`~/.gemini/antigravity/mcp_config.json` or eq
 }
 ```
 
-Restart Gemini CLI and the tools `save_context`, `read_context`, `get_context_status`, and `append_context_note` will be available.
-
-## JetBrains IDEs
-
-Add an External Tool:
-
-- Program: `unifymemfile`
-- Arguments: `save --summary "$Prompt$"`
-- Keymap: Assign `Ctrl+Alt+S`
-
-### Neovim
-
-```vim
-nnoremap <C-A-s> :!unifymemfile save --summary "$(input('Summary: '))"<CR>
-```
-
-Or via Lua + telescope or lazy.nvim.
+Restart Gemini CLI. The tools `save_context`, `read_context`, `get_context_status`, and `append_context_note` will be available.
 
 ### Claude Desktop
 
@@ -187,9 +137,27 @@ Add to `claude_desktop_config.json`:
 }
 ```
 
+### JetBrains IDEs
+
+Add an External Tool:
+
+- Program: `unifymemfile`
+- Arguments: `save --summary "$Prompt$"`
+- Keymap: Assign `Ctrl+Alt+S`
+
+### Neovim
+
+```vim
+nnoremap <C-A-s> :!unifymemfile save --summary "$(input('Summary: '))"<CR>
+```
+
 ## Project Root Detection
 
-The project root is detected by traversing upward and looking for:
+Automatically detected by traversing upward for:
 `.git`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `composer.json`, `pom.xml`, `build.gradle`, `CMakeLists.txt`
 
-You can override with `--project-root` / `projectRoot` parameter, or `--allow-empty-root` to skip the check.
+Override with `--project-root` / `projectRoot` parameter, or `--allow-empty-root` to skip the check.
+
+## License
+
+MIT
