@@ -235,6 +235,18 @@ class ContextServer {
                     }
                     const data = readContextFile(root);
                     let formatted = serializeContextFile(data);
+                    const last5Sessions = data.sessions.slice(0, 5);
+                    const sessionSummary = last5Sessions
+                        .map((s, i) => {
+                        const preview = s.summary
+                            ? s.summary.substring(0, 60) + (s.summary.length > 60 ? "..." : "")
+                            : "(no summary)";
+                        return `${i + 1}. [${s.date}] ${preview}`;
+                    })
+                        .join("\n");
+                    if (data.sessions.length > 0) {
+                        formatted += "\n\n## Recent Sessions (Last 5)\n\n" + sessionSummary + "\n";
+                    }
                     const pendingTasks = data.sessions
                         .filter((s) => s.openTasks && s.openTasks.trim())
                         .map((s) => `- [${s.date}] ${s.openTasks}`)
