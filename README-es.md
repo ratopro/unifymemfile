@@ -43,6 +43,48 @@ unifymemfile note "Nota del usuario aquí"
 unifymemfile init
 ```
 
+## Inicializar Contexto
+
+El archivo de contexto (`.context.md`) se crea automáticamente cuando guardas por primera vez. Pero también puedes inicializarlo explícitamente:
+
+### CLI
+
+```bash
+# Inicializar en el directorio actual
+unifymemfile init
+
+# Inicializar con el primer contexto
+unifymemfile save --summary "Proyecto iniciado, configuración inicial completada"
+```
+
+### Herramienta MCP
+
+```
+"Inicializar el contexto del proyecto"
+# o
+Herramienta: save_context
+{
+  "summary": "Proyecto iniciado, configuración inicial completada"
+}
+```
+
+### Primera Vez
+
+Cuando empiezas un nuevo proyecto:
+
+```bash
+# Opción 1: CLI
+cd /tu/proyecto
+unifymemfile init
+
+# Opción 2: MCP (en Gemini CLI, Claude, etc.)
+"Inicializar contexto para este proyecto"
+```
+
+El archivo `.context.md` se creará en la raíz de tu proyecto con una sesión vacía. Se llenará cuando guardes el contexto por primera vez.
+
+---
+
 ## Herramientas MCP
 
 | Herramienta | Descripción |
