@@ -195,11 +195,13 @@ Use them as you would naturally say them:
 |--------|-----------------|
 | **Save context** | "save what we've done", "note our progress", "don't lose what we got", "update where we're at", "record where we're at" |
 | **Read context** | "what have we done?", "give me the summary", "where are we?", "what's the status?", "catch me up", "remind me what we were doing" |
-| **Add note** | "note this down", "don't forget", "remember that", "keep in mind", "take a note", "mark this" |
+| **Add note** | "note this down", "don't forget", "remember that", "keep in mind", "take a note", "mark this", "write this down", "jot this down" |
+| **Remove note** | "delete that note", "remove this note", "forget about this", "scratch that note", "clear this reminder" |
 | **Check status** | "what's there?", "how's it going?", "what do we have?", "tell me the status", "what's saved?" |
-| **Add reminder** | "add to my todo list", "remind me to", "don't let me forget", "add to reminders", "put this on my list" |
-| **Toggle reminder** | "mark as done", "uncheck it", "complete this item", "toggle the reminder" |
-| **Read reminders** | "what's on my list?", "show my reminders", "what do I have to do?", "what are the pending tasks?" |
+| **Add reminder** | "add to my todo list", "remind me to", "don't let me forget", "add to reminders", "put this on my list", "I need to do this", "add this task" |
+| **Toggle reminder** | "mark as done", "uncheck it", "complete this item", "toggle the reminder", "done with this", "finished this" |
+| **Remove reminder** | "delete this task", "remove from list", "don't need this anymore", "clear this item", "take this off" |
+| **Read reminders** | "what's on my list?", "show my reminders", "what do I have to do?", "what are the pending tasks?", "what's left to do?" |
 
 ### Reminders
 

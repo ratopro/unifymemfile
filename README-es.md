@@ -195,11 +195,13 @@ Igual que Gemini CLI - usa lenguaje natural:
 |--------|------------------|
 | **Guardar contexto** | "guarda lo que hemos hecho", "anota el progreso", "salva el contexto", "actualiza lo que llevamos", "no pierdas lo que vamos haciendo" |
 | **Leer contexto** | "qué hemos hecho?", "dame el resumen", "cómo vamos?", "qué tal el estado?", "actualízame", "recuerda qué hacíamos" |
-| **Añadir nota** | "apunta esto", "no se me olvide", "recuerda que", "ten en cuenta", "tomar nota de", "marca aquí" |
+| **Añadir nota** | "apunta esto", "no se me olvide", "recuerda que", "ten en cuenta", "tomar nota de", "marca aquí", "escribe esto", "anótalo" |
+| **Eliminar nota** | "borra esa nota", "elimina esta nota", "olvida esto", "tacha esa nota", "borra eso" |
 | **Ver estado** | "qué hay?", "cómo va el tema?", "qué tenemos?", "cuéntame el estado", "qué hay guardado?" |
-| **Añadir recordatorio** | "añádelo a mi lista", "recuérdame hacer", "no me olvides", "ponlo en recordatorios", "mete esto en pendientes" |
-| **Marcar hecho** | " márcalo como hecho", "desmarca esto", "completar este elemento", "cambia el recordatorio" |
-| **Ver recordatorios** | "qué hay en mi lista?", "muestra mis recordatorios", "qué tengo que hacer?", "qué queda pendiente?" |
+| **Añadir recordatorio** | "añádelo a mi lista", "recuérdame hacer", "no me olvides", "ponlo en recordatorios", "mete esto en pendientes", "tengo que hacer esto", "añade esta tarea" |
+| **Marcar hecho** | " márcalo como hecho", "desmarca esto", "completar este elemento", "cambia el recordatorio", "esto ya lo hice", "terminé esto" |
+| **Eliminar recordatorio** | "borra esta tarea", "quitarla de la lista", "ya no lo necesito", "borra este elemento", "sácalo de ahí" |
+| **Ver recordatorios** | "qué hay en mi lista?", "muestra mis recordatorios", "qué tengo que hacer?", "qué queda pendiente?", "qué nos falta por hacer?" |
 
 ### Recordatorios
 
