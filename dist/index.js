@@ -234,7 +234,14 @@ class ContextServer {
                         };
                     }
                     const data = readContextFile(root);
-                    const formatted = serializeContextFile(data);
+                    let formatted = serializeContextFile(data);
+                    const pendingTasks = data.sessions
+                        .filter((s) => s.openTasks && s.openTasks.trim())
+                        .map((s) => `- [${s.date}] ${s.openTasks}`)
+                        .join("\n");
+                    if (pendingTasks) {
+                        formatted += "\n\n## Pending Tasks\n\n" + pendingTasks + "\n";
+                    }
                     return {
                         content: [
                             {
