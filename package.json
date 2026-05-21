@@ -1,6 +1,7 @@
 {
   "name": "unifymemfile",
   "version": "1.0.0",
+  "type": "module",
   "description": "MCP server for persisting and sharing project context across IDEs",
   "main": "dist/index.js",
   "bin": {
@@ -13,12 +14,17 @@
     "install:ide": "node dist/install.js",
     "watch": "tsc --watch"
   },
-  "keywords": ["mcp", "context", "ide", "collaboration"],
+  "keywords": [
+    "mcp",
+    "context",
+    "ide",
+    "collaboration"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@clack/prompts": "^0.7.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^12.0.0"
   },
   "devDependencies": {

@@ -1,6 +1,11 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { CallToolRequestSchema } from "@modelcontextprotocol/sdk/types.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
 import {
   saveContext,
   SaveContextOptions,
@@ -9,6 +14,8 @@ import {
   readContextFile,
   writeContextFile,
   getContextStatus,
+  generateDateKey,
+  serializeContextFile,
   ContextData,
   SessionData,
 } from "./markdown.js";
@@ -26,9 +33,110 @@ class ContextServer {
       {
         capabilities: {
           tools: {},
+          resources: {},
         },
       }
     );
+
+    this.setupTools();
+    this.setupResources();
+  }
+
+  private setupResources() {
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      return {
+        resources: [
+          {
+            uri: "context://current",
+            name: "Current Project Context",
+            mimeType: "text/markdown",
+            description: "The complete .context.md file for the current project",
+          },
+        ],
+      };
+    });
+
+    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+      const { uri } = request.params;
+
+      if (uri === "context://current") {
+        const root = resolveProjectRoot();
+        if (!root) {
+          throw new Error("Could not determine project root.");
+        }
+        const data = readContextFile(root);
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/markdown",
+              text: serializeContextFile(data),
+            },
+          ],
+        };
+      }
+
+      throw new Error(`Unknown resource: ${uri}`);
+    });
+  }
+
+  private setupTools() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+      return {
+        tools: [
+          {
+            name: "save_context",
+            description: "Save or update the project context",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+                summary: { type: "string" },
+                currentState: { type: "string" },
+                recentChanges: { type: "string" },
+                decisions: { type: "string" },
+                openTasks: { type: "string" },
+                knownIssues: { type: "string" },
+                notes: { type: "string" },
+                allowEmptyRoot: { type: "boolean" },
+              },
+            },
+          },
+          {
+            name: "read_context",
+            description: "Read the current project context",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+              },
+            },
+          },
+          {
+            name: "get_context_status",
+            description: "Show context file status",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+              },
+            },
+          },
+          {
+            name: "append_context_note",
+            description: "Append a note to today's session",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+                note: { type: "string" },
+              },
+              required: ["note"],
+            },
+          },
+        ],
+      };
+    });
 
     this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { name, arguments: args } = request.params;
@@ -94,7 +202,7 @@ class ContextServer {
           }
 
           const data = readContextFile(root);
-          const formatted = formatContextForDisplay(data);
+          const formatted = serializeContextFile(data);
 
           return {
             content: [
@@ -167,15 +275,16 @@ class ContextServer {
           }
 
           const data = readContextFile(root);
-          const now = new Date();
-          const dateKey = now.toISOString().slice(0, 13).replace("T", "-") + ":" + now.getMinutes().toString().padStart(2, "0");
+          const dateKey = generateDateKey();
 
           const existingMatch = data.sessions.findIndex((s) => s.date === dateKey);
+          const timestamp = new Date().toLocaleTimeString();
+
           if (existingMatch >= 0) {
             const session = data.sessions[existingMatch];
             session.notes = session.notes
-              ? `${session.notes}\n- [${dateKey}] ${note}`
-              : `- [${dateKey}] ${note}`;
+              ? `${session.notes}\n- [${timestamp}] ${note}`
+              : `- [${timestamp}] ${note}`;
             data.sessions.splice(existingMatch, 1);
             data.sessions.unshift(session);
           } else {
@@ -187,7 +296,7 @@ class ContextServer {
               decisions: "",
               openTasks: "",
               knownIssues: "",
-              notes: `- [${dateKey}] ${note}`,
+              notes: `- [${timestamp}] ${note}`,
             };
             data.sessions.unshift(newSession);
           }
@@ -222,35 +331,6 @@ class ContextServer {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
   }
-}
-
-function formatContextForDisplay(data: ContextData): string {
-  if (data.sessions.length === 0) {
-    return "# Project Context\n\n_No sessions recorded yet_\n";
-  }
-
-  let result = "# Project Context\n\n";
-
-  for (const session of data.sessions) {
-    result += `## Session ${session.date}\n\n`;
-    const sections = [
-      { label: "Summary", value: session.summary },
-      { label: "Current State", value: session.currentState },
-      { label: "Recent Changes", value: session.recentChanges },
-      { label: "Decisions", value: session.decisions },
-      { label: "Open Tasks", value: session.openTasks },
-      { label: "Known Issues", value: session.knownIssues },
-      { label: "Notes", value: session.notes },
-    ];
-    for (const s of sections) {
-      if (s.value && s.value.trim()) {
-        result += `### ${s.label}\n\n${s.value}\n\n`;
-      }
-    }
-    result += "---\n\n";
-  }
-
-  return result;
 }
 
 const server = new ContextServer();

@@ -5,6 +5,7 @@ import {
   contextFileExists,
   readContextFile,
   writeContextFile,
+  generateDateKey,
   ContextData,
   SessionData,
 } from "./markdown.js";
@@ -55,8 +56,7 @@ export async function saveContext(
       ? readContextFile(root)
       : { sessions: [] };
 
-    const now = new Date();
-    const dateKey = now.toISOString().slice(0, 13).replace("T", "-") + ":" + now.getMinutes().toString().padStart(2, "0");
+    const dateKey = generateDateKey();
 
     const existingMatch = data.sessions.findIndex((s) => s.date === dateKey);
     if (existingMatch >= 0) {
