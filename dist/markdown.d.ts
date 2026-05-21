@@ -8,6 +8,15 @@ export interface SessionData {
     knownIssues: string;
     notes: string;
 }
+export interface ReminderItem {
+    id: string;
+    text: string;
+    checked: boolean;
+    createdAt: string;
+}
+export interface RemindersData {
+    items: ReminderItem[];
+}
 export interface ContextData {
     sessions: SessionData[];
 }
@@ -26,3 +35,12 @@ export declare function getContextStatus(projectRoot: string): {
     sessionCount?: number;
     latestSession?: string;
 };
+export declare function remindersFileExists(projectRoot: string): boolean;
+export declare function readRemindersFile(projectRoot: string): RemindersData;
+export declare function writeRemindersFile(projectRoot: string, data: RemindersData): void;
+export declare function serializeRemindersFile(data: RemindersData): string;
+export declare function parseRemindersFile(content: string): RemindersData;
+export declare function generateReminderId(text: string): string;
+export declare function addReminder(projectRoot: string, text: string): RemindersData;
+export declare function toggleReminder(projectRoot: string, id: string): RemindersData;
+export declare function removeReminder(projectRoot: string, id: string): RemindersData;

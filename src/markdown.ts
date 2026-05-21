@@ -12,6 +12,17 @@ export interface SessionData {
   notes: string;
 }
 
+export interface ReminderItem {
+  id: string;
+  text: string;
+  checked: boolean;
+  createdAt: string;
+}
+
+export interface RemindersData {
+  items: ReminderItem[];
+}
+
 export interface ContextData {
   sessions: SessionData[];
 }
@@ -196,4 +207,93 @@ export function getContextStatus(
     sessionCount: data.sessions.length,
     latestSession: data.sessions[0]?.date || "(no session)",
   };
+}
+
+export function remindersFileExists(projectRoot: string): boolean {
+  return fs.existsSync(path.join(projectRoot, ".reminders.md"));
+}
+
+export function readRemindersFile(projectRoot: string): RemindersData {
+  const filePath = path.join(projectRoot, ".reminders.md");
+
+  if (!fs.existsSync(filePath)) {
+    return { items: [] };
+  }
+
+  const content = fs.readFileSync(filePath, "utf-8");
+  return parseRemindersFile(content);
+}
+
+export function writeRemindersFile(projectRoot: string, data: RemindersData): void {
+  const filePath = path.join(projectRoot, ".reminders.md");
+  const content = serializeRemindersFile(data);
+  fs.writeFileSync(filePath, content, "utf-8");
+}
+
+export function serializeRemindersFile(data: RemindersData): string {
+  let result = "# Reminders\n\n";
+
+  if (data.items.length === 0) {
+    result += "_No reminders yet_\n";
+    return result;
+  }
+
+  for (const item of data.items) {
+    const checkbox = item.checked ? "[x]" : "[ ]";
+    result += `- ${checkbox} ${item.text}\n`;
+  }
+
+  return result;
+}
+
+export function parseRemindersFile(content: string): RemindersData {
+  const items: ReminderItem[] = [];
+  const lines = content.split(/\r?\n/);
+
+  for (const line of lines) {
+    const match = line.match(/^- \[([ x])\] (.+)$/);
+    if (match) {
+      items.push({
+        id: generateReminderId(match[2]),
+        text: match[2].trim(),
+        checked: match[1] === "x",
+        createdAt: new Date().toISOString(),
+      });
+    }
+  }
+
+  return { items };
+}
+
+export function generateReminderId(text: string): string {
+  return text.substring(0, 20).replace(/\s+/g, "-").toLowerCase() + "-" + Date.now();
+}
+
+export function addReminder(projectRoot: string, text: string): RemindersData {
+  const data = readRemindersFile(projectRoot);
+  data.items.push({
+    id: generateReminderId(text),
+    text,
+    checked: false,
+    createdAt: new Date().toISOString(),
+  });
+  writeRemindersFile(projectRoot, data);
+  return data;
+}
+
+export function toggleReminder(projectRoot: string, id: string): RemindersData {
+  const data = readRemindersFile(projectRoot);
+  const item = data.items.find((i) => i.id === id);
+  if (item) {
+    item.checked = !item.checked;
+  }
+  writeRemindersFile(projectRoot, data);
+  return data;
+}
+
+export function removeReminder(projectRoot: string, id: string): RemindersData {
+  const data = readRemindersFile(projectRoot);
+  data.items = data.items.filter((i) => i.id !== id);
+  writeRemindersFile(projectRoot, data);
+  return data;
 }

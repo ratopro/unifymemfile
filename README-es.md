@@ -93,12 +93,17 @@ El archivo `.context.md` se creará en la raíz de tu proyecto con una sesión v
 | `read_context` | Leer todos los datos del contexto |
 | `get_context_status` | Verificar si `.context.md` existe, tamaño, número de sesiones |
 | `append_context_note` | Añadir una nota a la sesión actual |
+| `add_reminder` | Añadir un recordatorio a `.reminders.md` |
+| `toggle_reminder` | Marcar/desmarcar un recordatorio |
+| `remove_reminder` | Eliminar un recordatorio |
+| `read_reminders` | Leer todos los recordatorios |
 
 ### Recurso MCP
 
 | Recurso | Descripción |
 |---------|-------------|
 | `context://current` | El archivo `.context.md` completo del proyecto actual |
+| `reminders://current` | El archivo `.reminders.md` completo del proyecto actual |
 
 Accede con: `@unifymemfile:context://current`
 
@@ -188,14 +193,34 @@ Igual que Gemini CLI - usa lenguaje natural:
 
 | Acción | Frases populares |
 |--------|------------------|
-| **Guardar contexto** | "guarda lo que hemos hecho", "anota el progreso", "salva el contexto", "actualiza lo que vamos haciendo", "no pierdas lo que llevamos" |
-| **Leer contexto** | "qué hemos hecho?", "dame el resumen", "qué tal vamos?", "cómo estamos?", "qué se ha hecho?", "recuerda qué hacíamos", "qué había hasta ahora?" |
-| **Añadir nota** | "apunta esto", "no se me olvide", "recuerda que", "hay que tener en cuenta", "tomar nota de", "pon una marca aquí" |
+| **Guardar contexto** | "guarda lo que hemos hecho", "anota el progreso", "salva el contexto", "actualiza lo que llevamos", "no pierdas lo que vamos haciendo" |
+| **Leer contexto** | "qué hemos hecho?", "dame el resumen", "cómo vamos?", "qué tal el estado?", "actualízame", "recuerda qué hacíamos" |
+| **Añadir nota** | "apunta esto", "no se me olvide", "recuerda que", "ten en cuenta", "tomar nota de", "marca aquí" |
 | **Ver estado** | "qué hay?", "cómo va el tema?", "qué tenemos?", "cuéntame el estado", "qué hay guardado?" |
+| **Añadir recordatorio** | "añádelo a mi lista", "recuérdame hacer", "no me olvides", "ponlo en recordatorios", "mete esto en pendientes" |
+| **Marcar hecho** | " márcalo como hecho", "desmarca esto", "completar este elemento", "cambia el recordatorio" |
+| **Ver recordatorios** | "qué hay en mi lista?", "muestra mis recordatorios", "qué tengo que hacer?", "qué queda pendiente?" |
+
+### Recordatorios
+
+Los recordatorios se guardan en `.reminders.md` como lista de tareas en markdown:
+
+```md
+# Reminders
+
+- [ ] Comprar comida
+- [x] Llamar al médico
+- [ ] Terminar el informe
+```
+
+| Acción | Ejemplo |
+|--------|---------|
+| **Añadir** | `add_reminder` con `text: "Revisar PR"` |
+| **Marcar** | `toggle_reminder` con `id: "revisar-pr-123456"` |
+| **Eliminar** | `remove_reminder` con `id: "revisar-pr-123456"` |
+| **Leer** | `read_reminders` - devuelve la lista completa |
 
 ---
-
-## Formato `.context.md`
 
 ```md
 # Contexto del Proyecto

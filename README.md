@@ -93,12 +93,17 @@ The `.context.md` file will be created in your project root with an empty sessio
 | `read_context` | Read all context data |
 | `get_context_status` | Check if `.context.md` exists, size, sessions count |
 | `append_context_note` | Append a note to the current session |
+| `add_reminder` | Add a new reminder item to `.reminders.md` |
+| `toggle_reminder` | Toggle a reminder (checked/unchecked) |
+| `remove_reminder` | Remove a reminder item |
+| `read_reminders` | Read all reminders |
 
 ### MCP Resource
 
 | Resource | Description |
 |----------|-------------|
 | `context://current` | The complete `.context.md` file for the current project |
+| `reminders://current` | The complete `.reminders.md` file for the current project |
 
 Access it with: `@unifymemfile:context://current`
 
@@ -192,6 +197,28 @@ Use them as you would naturally say them:
 | **Read context** | "what have we done?", "give me the summary", "where are we?", "what's the status?", "catch me up", "remind me what we were doing" |
 | **Add note** | "note this down", "don't forget", "remember that", "keep in mind", "take a note", "mark this" |
 | **Check status** | "what's there?", "how's it going?", "what do we have?", "tell me the status", "what's saved?" |
+| **Add reminder** | "add to my todo list", "remind me to", "don't let me forget", "add to reminders", "put this on my list" |
+| **Toggle reminder** | "mark as done", "uncheck it", "complete this item", "toggle the reminder" |
+| **Read reminders** | "what's on my list?", "show my reminders", "what do I have to do?", "what are the pending tasks?" |
+
+### Reminders
+
+Reminders are stored in `.reminders.md` as a markdown checklist:
+
+```md
+# Reminders
+
+- [ ] Buy groceries
+- [x] Call the doctor
+- [ ] Finish the report
+```
+
+| Action | Example |
+|--------|--------|
+| **Add** | `add_reminder` with `text: "Review PR"` |
+| **Toggle** | `toggle_reminder` with `id: "review-pr-123456"` |
+| **Remove** | `remove_reminder` with `id: "review-pr-123456"` |
+| **Read** | `read_reminders` - returns the full checklist |
 
 ---
 

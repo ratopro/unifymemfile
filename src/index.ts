@@ -18,6 +18,13 @@ import {
   serializeContextFile,
   ContextData,
   SessionData,
+  readRemindersFile,
+  writeRemindersFile,
+  serializeRemindersFile,
+  addReminder,
+  toggleReminder,
+  removeReminder,
+  RemindersData,
 } from "./markdown.js";
 import { resolveProjectRoot } from "./project-root.js";
 
@@ -52,6 +59,12 @@ class ContextServer {
             mimeType: "text/markdown",
             description: "The complete .context.md file for the current project",
           },
+          {
+            uri: "reminders://current",
+            name: "Current Reminders",
+            mimeType: "text/markdown",
+            description: "The complete .reminders.md file for the current project",
+          },
         ],
       };
     });
@@ -71,6 +84,23 @@ class ContextServer {
               uri,
               mimeType: "text/markdown",
               text: serializeContextFile(data),
+            },
+          ],
+        };
+      }
+
+      if (uri === "reminders://current") {
+        const root = resolveProjectRoot();
+        if (!root) {
+          throw new Error("Could not determine project root.");
+        }
+        const data = readRemindersFile(root);
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "text/markdown",
+              text: serializeRemindersFile(data),
             },
           ],
         };
@@ -132,6 +162,52 @@ class ContextServer {
                 note: { type: "string" },
               },
               required: ["note"],
+            },
+          },
+          {
+            name: "add_reminder",
+            description: "Add a new reminder item to the reminders list",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+                text: { type: "string" },
+              },
+              required: ["text"],
+            },
+          },
+          {
+            name: "toggle_reminder",
+            description: "Toggle a reminder item (checked/unchecked)",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+                id: { type: "string" },
+              },
+              required: ["id"],
+            },
+          },
+          {
+            name: "remove_reminder",
+            description: "Remove a reminder item from the list",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+                id: { type: "string" },
+              },
+              required: ["id"],
+            },
+          },
+          {
+            name: "read_reminders",
+            description: "Read all reminders",
+            inputSchema: {
+              type: "object",
+              properties: {
+                projectRoot: { type: "string" },
+              },
             },
           },
         ],
@@ -308,6 +384,157 @@ class ContextServer {
               {
                 type: "text",
                 text: `Note appended to ${root}/.context.md`,
+              },
+            ],
+          };
+        }
+
+        case "add_reminder": {
+          const root = resolveProjectRoot(
+            args?.projectRoot as string | undefined
+          );
+          if (!root) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Could not determine project root.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const text = args?.text as string | undefined;
+          if (!text) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: 'text' parameter is required.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const remindersData = addReminder(root, text);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Reminder added to ${root}/.reminders.md\n\n${serializeRemindersFile(remindersData)}`,
+              },
+            ],
+          };
+        }
+
+        case "toggle_reminder": {
+          const root = resolveProjectRoot(
+            args?.projectRoot as string | undefined
+          );
+          if (!root) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Could not determine project root.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const id = args?.id as string | undefined;
+          if (!id) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: 'id' parameter is required.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const toggledData = toggleReminder(root, id);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Reminder toggled in ${root}/.reminders.md\n\n${serializeRemindersFile(toggledData)}`,
+              },
+            ],
+          };
+        }
+
+        case "remove_reminder": {
+          const root = resolveProjectRoot(
+            args?.projectRoot as string | undefined
+          );
+          if (!root) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Could not determine project root.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const id = args?.id as string | undefined;
+          if (!id) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: 'id' parameter is required.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const removedData = removeReminder(root, id);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: `Reminder removed from ${root}/.reminders.md\n\n${serializeRemindersFile(removedData)}`,
+              },
+            ],
+          };
+        }
+
+        case "read_reminders": {
+          const root = resolveProjectRoot(
+            args?.projectRoot as string | undefined
+          );
+          if (!root) {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "Error: Could not determine project root.",
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const remindersData = readRemindersFile(root);
+
+          return {
+            content: [
+              {
+                type: "text",
+                text: serializeRemindersFile(remindersData),
               },
             ],
           };
