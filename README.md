@@ -50,6 +50,96 @@ unifymemfile init
 | `get_context_status` | Check if `.context.md` exists, size, sessions count |
 | `append_context_note` | Append a note to the current session |
 
+### MCP Resource
+
+| Resource | Description |
+|----------|-------------|
+| `context://current` | The complete `.context.md` file for the current project |
+
+Access it with: `@unifymemfile:context://current`
+
+---
+
+## MCP Usage
+
+### Gemini CLI
+
+#### Check MCP Status
+
+```bash
+/mcp
+```
+
+This shows all connected MCP servers and their tools.
+
+#### Using MCP Tools
+
+In Gemini CLI, simply describe what you want:
+
+```bash
+# Save context
+> Save the current context: working on feature X, need to fix bug in auth
+
+# Read context
+> Read the project context
+
+# Check status
+> What is the context status?
+
+# Append a note
+> Add a note: Remember to test the login flow
+```
+
+#### Using MCP Resources
+
+```bash
+# Access the context file directly
+> @unifymemfile:context://current
+```
+
+### Claude Desktop
+
+In Claude Desktop, use the tools in conversation:
+
+```
+# Save context
+Tool: save_context
+{
+  "summary": "Working on authentication feature",
+  "currentState": "Implementing OAuth flow",
+  "recentChanges": "Added user model and migration",
+  "openTasks": "Complete OAuth, write tests"
+}
+
+# Read context
+Tool: read_context
+{}
+
+# Check status
+Tool: get_context_status
+{}
+
+# Append note
+Tool: append_context_note
+{
+  "note": "OAuth token refresh needs testing"
+}
+```
+
+### VS Code / Cursor (with MCP enabled)
+
+Same as Gemini CLI - use natural language:
+
+```
+# Save context
+"Save context: working on API integration, found endpoint issues"
+
+# Read context
+"Read the project context to understand current state"
+```
+
+---
+
 ## `.context.md` Format
 
 ```md
