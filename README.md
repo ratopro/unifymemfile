@@ -27,8 +27,14 @@ This will install both MCP server and Antigravity skill by default.
 
 Examples:
 ```bash
+# MCP only
 curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --mcp
+
+# Skill only
 curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --skill
+
+# Uninstall
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --uninstall
 ```
 
 ---
