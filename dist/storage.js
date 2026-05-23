@@ -1,5 +1,13 @@
 import * as fs from "fs";
 import * as path from "path";
+export function getDefaultConfig() {
+    return {
+        autoUpdate: true,
+        autoUpdateBranch: "main",
+        defaultMode: "compact",
+        recentSessionCount: 5,
+    };
+}
 export function getStoragePaths(projectRoot) {
     const dir = path.join(projectRoot, ".unifymemfile");
     return {
@@ -69,4 +77,25 @@ export function migrateFromLegacy(projectRoot) {
         migrated = true;
     }
     return migrated;
+}
+export function readConfig(projectRoot) {
+    const paths = getStoragePaths(projectRoot);
+    const configPath = paths.config;
+    if (!fs.existsSync(configPath)) {
+        const defaults = getDefaultConfig();
+        writeConfig(projectRoot, defaults);
+        return defaults;
+    }
+    try {
+        const content = fs.readFileSync(configPath, "utf-8");
+        return { ...getDefaultConfig(), ...JSON.parse(content) };
+    }
+    catch {
+        return getDefaultConfig();
+    }
+}
+export function writeConfig(projectRoot, config) {
+    const paths = getStoragePaths(projectRoot);
+    fs.mkdirSync(paths.dir, { recursive: true });
+    fs.writeFileSync(paths.config, JSON.stringify(config, null, 2), "utf-8");
 }

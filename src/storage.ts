@@ -10,6 +10,22 @@ export interface StoragePaths {
   config: string;
 }
 
+export interface UnifymemfileConfig {
+  autoUpdate: boolean;
+  autoUpdateBranch: string;
+  defaultMode: "compact" | "full" | "recent";
+  recentSessionCount: number;
+}
+
+export function getDefaultConfig(): UnifymemfileConfig {
+  return {
+    autoUpdate: true,
+    autoUpdateBranch: "main",
+    defaultMode: "compact",
+    recentSessionCount: 5,
+  };
+}
+
 export function getStoragePaths(projectRoot: string): StoragePaths {
   const dir = path.join(projectRoot, ".unifymemfile");
   return {
@@ -42,6 +58,7 @@ export function ensureStorageDir(projectRoot: string): StoragePaths {
     if (fs.existsSync(legacy.reminders) && !fs.existsSync(paths.reminders)) {
       fs.renameSync(legacy.reminders, paths.reminders);
     }
+
   }
 
   return paths;
@@ -87,4 +104,28 @@ export function migrateFromLegacy(projectRoot: string): boolean {
   }
 
   return migrated;
+}
+
+export function readConfig(projectRoot: string): UnifymemfileConfig {
+  const paths = getStoragePaths(projectRoot);
+  const configPath = paths.config;
+
+  if (!fs.existsSync(configPath)) {
+    const defaults = getDefaultConfig();
+    writeConfig(projectRoot, defaults);
+    return defaults;
+  }
+
+  try {
+    const content = fs.readFileSync(configPath, "utf-8");
+    return { ...getDefaultConfig(), ...JSON.parse(content) };
+  } catch {
+    return getDefaultConfig();
+  }
+}
+
+export function writeConfig(projectRoot: string, config: UnifymemfileConfig): void {
+  const paths = getStoragePaths(projectRoot);
+  fs.mkdirSync(paths.dir, { recursive: true });
+  fs.writeFileSync(paths.config, JSON.stringify(config, null, 2), "utf-8");
 }

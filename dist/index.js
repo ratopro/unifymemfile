@@ -5,7 +5,8 @@ import { CallToolRequestSchema, ListToolsRequestSchema, ListResourcesRequestSche
 import { saveContext, } from "./context.js";
 import { readContextFile, writeContextFile, getContextStatus, generateDateKey, serializeContextFile, readRemindersFile, serializeRemindersFile, addReminder, toggleReminder, removeReminder, generateCompactContext, } from "./markdown.js";
 import { resolveProjectRoot } from "./project-root.js";
-import { migrateFromLegacy, hasLegacyFiles, getStoragePaths } from "./storage.js";
+import { migrateFromLegacy, hasLegacyFiles, getStoragePaths, readConfig } from "./storage.js";
+import { checkAndUpdateOnce } from "./updater.js";
 class ContextServer {
     server;
     constructor() {
@@ -229,30 +230,35 @@ class ContextServer {
                             isError: true,
                         };
                     }
+                    let updateMsg;
+                    try {
+                        const config = readConfig(root);
+                        if (config.autoUpdate) {
+                            const updateResult = checkAndUpdateOnce();
+                            if (updateResult.updated) {
+                                updateMsg = updateResult.message;
+                            }
+                        }
+                    }
+                    catch {
+                        // Non-blocking: update failure should not abort save
+                    }
                     const result = await saveContext({
                         ...args,
                         projectRoot: root,
                     });
+                    const messages = [];
                     if (result.success) {
-                        return {
-                            content: [
-                                {
-                                    type: "text",
-                                    text: `Context saved to ${result.path}`,
-                                },
-                            ],
-                        };
+                        messages.push(`Context saved to ${result.path}`);
+                        if (updateMsg)
+                            messages.push(updateMsg);
+                        return { content: [{ type: "text", text: messages.join("\n\n") }] };
                     }
                     else {
-                        return {
-                            content: [
-                                {
-                                    type: "text",
-                                    text: `Error saving context: ${result.error}`,
-                                },
-                            ],
-                            isError: true,
-                        };
+                        messages.push(`Error saving context: ${result.error}`);
+                        if (updateMsg)
+                            messages.push(updateMsg);
+                        return { content: [{ type: "text", text: messages.join("\n\n") }], isError: true };
                     }
                 }
                 case "read_context": {

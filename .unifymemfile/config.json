@@ -1,0 +1,6 @@
+{
+  "autoUpdate": true,
+  "autoUpdateBranch": "main",
+  "defaultMode": "compact",
+  "recentSessionCount": 5
+}

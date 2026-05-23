@@ -117,13 +117,24 @@ description: |
   Use when user asks to install unifymemfile, setup context management, or enable project memory.
 license: MIT
 metadata:
-  version: v1
+  version: v2
   publisher: rpro
 ---
 
 # unifymemfile Installer Skill
 
-This skill installs and configures unifymemfile, an MCP server that persists and shares project context across IDEs via `.context.md`.
+This skill installs and configures unifymemfile, an MCP server that persists and shares project context across IDEs.
+
+## Auto Update
+
+On the first `save_context` call, unifymemfile checks GitHub for updates.
+If the local installation is clean (no uncommitted changes), it updates itself automatically:
+`git pull --ff-only` → `npm install` (if deps changed) → `npm run build`.
+
+If the user asks to update manually, run:
+```bash
+curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.sh | bash -s -- --both
+```
 
 ## Installation
 
@@ -135,35 +146,99 @@ curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.s
 
 ### Options
 
-- `--mcp`   Install MCP server only
-- `--skill` Install Antigravity skill only
-- `--both`  Install both (default)
+- `--mcp`       Install MCP server only
+- `--skill`     Install Antigravity skill only
+- `--both`      Install both (default)
 - `--uninstall` Remove installation
+
+## Storage
+
+Files are stored in `.unifymemfile/` at the project root:
+
+| File | Description |
+|------|-------------|
+| `context.md` | Full session history |
+| `reminders.md` | Checklist reminders |
+| `memory.md` | Synthesized persistent memory |
+| `archive.md` | Archived old sessions |
+| `config.json` | Preferences (autoUpdate, defaultMode, etc.) |
+
+Legacy `.context.md` and `.reminders.md` are auto-migrated on first save.
 
 ## MCP Tools
 
 | Tool | Description |
 |------|-------------|
-| `save_context` | Save/update context fields |
-| `read_context` | Read all context data |
-| `get_context_status` | Check if context exists |
+| `save_context` | Save/update context fields (auto-checks updates) |
+| `read_context` | Read context (modes: compact, full, recent) |
+| `get_context_status` | Check if context exists and show stats |
 | `append_context_note` | Add note to current session |
 | `add_reminder` | Add a reminder item |
 | `toggle_reminder` | Mark reminder done/pending |
 | `remove_reminder` | Remove a reminder |
 | `read_reminders` | Read all reminders |
+| `migrate` | Migrate legacy files to .unifymemfile/ |
+
+## Context Modes
+
+| Mode | Description |
+|------|-------------|
+| `compact` (default) | Current state + decisions + tasks + recent sessions (~35 lines) |
+| `full` | Complete session history with recent summary |
+| `recent -n 5` | Last N sessions complete |
+
+## CLI Commands
+
+```bash
+unifymemfile read                   # compact mode (default)
+unifymemfile read --mode full       # complete history
+unifymemfile read --mode recent -n 3
+unifymemfile compact                # shortcut for compact
+unifymemfile save --summary "..." --current-state "..."
+unifymemfile note "remember this"
+unifymemfile status
+unifymemfile migrate                # explicit migration
+unifymemfile init                   # create fresh .unifymemfile/
+```
 
 ## Colloquial Phrases
 
 | Action | Phrases |
 |--------|---------|
 | Save context | "save what we've done", "note our progress" |
-| Read context | "what have we done?", "where are we?" |
-| Add note | "note this down", "don't forget" |
-| Add reminder | "add to my todo list", "remind me to" |
-| Read reminders | "what's on my list?", "what's pending?"
+| Read context (compact) | "what's happening?", "where are we?", "dame contexto" |
+| Read context (full) | "show me everything", "full history" |
+| Add note | "note this down", "don't forget", "anota esto" |
+| Add reminder | "add to my todo list", "remind me to", "recuérdame" |
+| Read reminders | "what's on my list?", "what's pending?", "qué tengo pendiente" |
+| Update/migrate | "actualiza unifymemfile", "update unifymemfile" |
 
-## Context Format
+## Compact Context Format
+
+```md
+# Project Context
+
+## Current State
+...
+
+## Key Decisions
+...
+
+## Open Tasks
+- [2026-05-23] Do this task
+
+## Recent Sessions
+1. [2026-05-23] Summary of session
+2. [2026-05-22] Summary of session
+
+## Notes
+...
+
+## Reminders
+- [ ] Task
+```
+
+## Full Context Format
 
 ```md
 # Project Context
@@ -179,10 +254,21 @@ curl -fsSL https://raw.githubusercontent.com/ratopro/unifymemfile/main/install.s
 ### Recent Changes
 ...
 
+### Decisions
+...
+
 ### Open Tasks
 ...
 
+### Known Issues
+...
+
 ### Notes
+...
+
+---
+
+## Session YYYY-MM-DD-HH:00
 ...
 ```
 
