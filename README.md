@@ -331,3 +331,7 @@ Override with `--project-root` / `projectRoot` parameter, or `--allow-empty-root
 ## License
 
 MIT
+
+---
+
+If you enjoy what I do, consider supporting me on Ko-fi! Every little bit means the world! https://ko-fi.com/ratopro

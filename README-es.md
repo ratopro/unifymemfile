@@ -230,3 +230,7 @@ Sobrescribir con `--project-root` / parámetro `projectRoot`, o `--allow-empty-r
 ## Licencia
 
 MIT
+
+---
+
+Si te gusta lo que hago, ¡considera apoyarme en Ko-fi! ¡Cada granito de arena cuenta! https://ko-fi.com/ratopro
