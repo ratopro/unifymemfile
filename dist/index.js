@@ -1,15 +1,17 @@
+import * as fs from "fs";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema, ListResourcesRequestSchema, ReadResourceRequestSchema, } from "@modelcontextprotocol/sdk/types.js";
 import { saveContext, } from "./context.js";
-import { readContextFile, writeContextFile, getContextStatus, generateDateKey, serializeContextFile, readRemindersFile, serializeRemindersFile, addReminder, toggleReminder, removeReminder, } from "./markdown.js";
+import { readContextFile, writeContextFile, getContextStatus, generateDateKey, serializeContextFile, readRemindersFile, serializeRemindersFile, addReminder, toggleReminder, removeReminder, generateCompactContext, } from "./markdown.js";
 import { resolveProjectRoot } from "./project-root.js";
+import { migrateFromLegacy, hasLegacyFiles, getStoragePaths } from "./storage.js";
 class ContextServer {
     server;
     constructor() {
         this.server = new Server({
             name: "unifymemfile",
-            version: "1.0.0",
+            version: "1.1.0",
         }, {
             capabilities: {
                 tools: {},
@@ -35,16 +37,22 @@ class ContextServer {
                         mimeType: "text/markdown",
                         description: "The complete .reminders.md file for the current project",
                     },
+                    {
+                        uri: "context://compact",
+                        name: "Compact Project Context",
+                        mimeType: "text/markdown",
+                        description: "Compact view of the current project context for minimal token usage",
+                    },
                 ],
             };
         });
         this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
             const { uri } = request.params;
+            const root = resolveProjectRoot();
+            if (!root) {
+                throw new Error("Could not determine project root.");
+            }
             if (uri === "context://current") {
-                const root = resolveProjectRoot();
-                if (!root) {
-                    throw new Error("Could not determine project root.");
-                }
                 const data = readContextFile(root);
                 return {
                     contents: [
@@ -56,11 +64,20 @@ class ContextServer {
                     ],
                 };
             }
+            if (uri === "context://compact") {
+                const data = readContextFile(root);
+                const reminders = serializeRemindersFile(readRemindersFile(root));
+                return {
+                    contents: [
+                        {
+                            uri,
+                            mimeType: "text/markdown",
+                            text: generateCompactContext(root, reminders),
+                        },
+                    ],
+                };
+            }
             if (uri === "reminders://current") {
-                const root = resolveProjectRoot();
-                if (!root) {
-                    throw new Error("Could not determine project root.");
-                }
                 const data = readRemindersFile(root);
                 return {
                     contents: [
@@ -99,11 +116,19 @@ class ContextServer {
                     },
                     {
                         name: "read_context",
-                        description: "Read the current project context",
+                        description: "Read the current project context (compact by default)",
                         inputSchema: {
                             type: "object",
                             properties: {
                                 projectRoot: { type: "string" },
+                                mode: {
+                                    type: "string",
+                                    description: "Context mode: compact (default, minimal tokens), full (complete history), recent (last N sessions)",
+                                },
+                                sessions: {
+                                    type: "number",
+                                    description: "Number of recent sessions to show (default: 5, used with mode=recent)",
+                                },
                             },
                         },
                     },
@@ -175,6 +200,16 @@ class ContextServer {
                             },
                         },
                     },
+                    {
+                        name: "migrate",
+                        description: "Migrate legacy .context.md and .reminders.md files to .unifymemfile/ directory",
+                        inputSchema: {
+                            type: "object",
+                            properties: {
+                                projectRoot: { type: "string" },
+                            },
+                        },
+                    },
                 ],
             };
         });
@@ -233,27 +268,74 @@ class ContextServer {
                             isError: true,
                         };
                     }
-                    const data = readContextFile(root);
-                    let formatted = serializeContextFile(data);
-                    const last5Sessions = data.sessions.slice(0, 5);
-                    const sessionSummary = last5Sessions
-                        .map((s, i) => {
-                        const preview = s.summary
-                            ? s.summary.substring(0, 60) + (s.summary.length > 60 ? "..." : "")
-                            : "(no summary)";
-                        return `${i + 1}. [${s.date}] ${preview}`;
-                    })
-                        .join("\n");
-                    if (data.sessions.length > 0) {
-                        formatted += "\n\n## Recent Sessions (Last 5)\n\n" + sessionSummary + "\n";
+                    const mode = args?.mode || "compact";
+                    const sessionCount = args?.sessions || 5;
+                    if (mode === "full") {
+                        const data = readContextFile(root);
+                        let formatted = serializeContextFile(data);
+                        const recentSessions = data.sessions.slice(0, sessionCount);
+                        const sessionSummary = recentSessions
+                            .map((s, i) => {
+                            const preview = s.summary
+                                ? s.summary.substring(0, 60) + (s.summary.length > 60 ? "..." : "")
+                                : "(no summary)";
+                            return `${i + 1}. [${s.date}] ${preview}`;
+                        })
+                            .join("\n");
+                        if (data.sessions.length > 0) {
+                            formatted += "\n\n## Recent Sessions\n\n" + sessionSummary + "\n";
+                        }
+                        const pendingTasks = data.sessions
+                            .filter((s) => s.openTasks && s.openTasks.trim())
+                            .map((s) => `- [${s.date}] ${s.openTasks}`)
+                            .join("\n");
+                        if (pendingTasks) {
+                            formatted += "\n\n## Pending Tasks\n\n" + pendingTasks + "\n";
+                        }
+                        return {
+                            content: [
+                                {
+                                    type: "text",
+                                    text: formatted,
+                                },
+                            ],
+                        };
                     }
-                    const pendingTasks = data.sessions
-                        .filter((s) => s.openTasks && s.openTasks.trim())
-                        .map((s) => `- [${s.date}] ${s.openTasks}`)
-                        .join("\n");
-                    if (pendingTasks) {
-                        formatted += "\n\n## Pending Tasks\n\n" + pendingTasks + "\n";
+                    if (mode === "recent") {
+                        const data = readContextFile(root);
+                        const sessions = data.sessions.slice(0, sessionCount);
+                        let formatted = "# Project Context\n\n";
+                        for (let i = 0; i < sessions.length; i++) {
+                            const s = sessions[i];
+                            formatted += `## Session ${s.date}\n\n`;
+                            if (s.summary)
+                                formatted += `### Summary\n\n${s.summary}\n\n`;
+                            if (s.currentState)
+                                formatted += `### Current State\n\n${s.currentState}\n\n`;
+                            if (s.recentChanges)
+                                formatted += `### Recent Changes\n\n${s.recentChanges}\n\n`;
+                            if (s.decisions)
+                                formatted += `### Decisions\n\n${s.decisions}\n\n`;
+                            if (s.openTasks)
+                                formatted += `### Open Tasks\n\n${s.openTasks}\n\n`;
+                            if (s.knownIssues)
+                                formatted += `### Known Issues\n\n${s.knownIssues}\n\n`;
+                            if (s.notes)
+                                formatted += `### Notes\n\n${s.notes}\n\n`;
+                            if (i < sessions.length - 1)
+                                formatted += "---\n\n";
+                        }
+                        return {
+                            content: [
+                                {
+                                    type: "text",
+                                    text: formatted.trim() + "\n",
+                                },
+                            ],
+                        };
                     }
+                    const reminders = serializeRemindersFile(readRemindersFile(root));
+                    const formatted = generateCompactContext(root, reminders);
                     return {
                         content: [
                             {
@@ -277,8 +359,9 @@ class ContextServer {
                         };
                     }
                     const status = getContextStatus(root);
+                    const storagePaths = getStoragePaths(root);
                     const statusText = status.exists
-                        ? `Exists: yes\nPath: ${status.path}\nSize: ${status.size} bytes\nLast modified: ${status.lastModified}\nSessions: ${status.sessionCount}\nLatest: ${status.latestSession}`
+                        ? `Exists: yes\nPath: ${status.path}\nStorage: ${storagePaths.dir}\nSize: ${status.size} bytes\nLast modified: ${status.lastModified}\nSessions: ${status.sessionCount}\nLatest: ${status.latestSession}`
                         : `Exists: no\nPath: ${status.path}`;
                     return {
                         content: [
@@ -344,7 +427,46 @@ class ContextServer {
                         content: [
                             {
                                 type: "text",
-                                text: `Note appended to ${root}/.context.md`,
+                                text: `Note appended to ${root}`,
+                            },
+                        ],
+                    };
+                }
+                case "migrate": {
+                    const root = resolveProjectRoot(args?.projectRoot);
+                    if (!root) {
+                        return {
+                            content: [
+                                {
+                                    type: "text",
+                                    text: "Error: Could not determine project root.",
+                                },
+                            ],
+                            isError: true,
+                        };
+                    }
+                    if (!hasLegacyFiles(root)) {
+                        const storagePaths = getStoragePaths(root);
+                        const migrated = fs.existsSync(storagePaths.context) || fs.existsSync(storagePaths.reminders);
+                        return {
+                            content: [
+                                {
+                                    type: "text",
+                                    text: migrated
+                                        ? "Already using .unifymemfile/ storage. No legacy files found."
+                                        : "No context or reminders files found.",
+                                },
+                            ],
+                        };
+                    }
+                    const migrated = migrateFromLegacy(root);
+                    return {
+                        content: [
+                            {
+                                type: "text",
+                                text: migrated
+                                    ? "Legacy files migrated to .unifymemfile/ successfully."
+                                    : "Files already in .unifymemfile/ or migration not needed.",
                             },
                         ],
                     };
@@ -379,7 +501,7 @@ class ContextServer {
                         content: [
                             {
                                 type: "text",
-                                text: `Reminder added to ${root}/.reminders.md\n\n${serializeRemindersFile(remindersData)}`,
+                                text: `Reminder added\n\n${serializeRemindersFile(remindersData)}`,
                             },
                         ],
                     };
@@ -414,7 +536,7 @@ class ContextServer {
                         content: [
                             {
                                 type: "text",
-                                text: `Reminder toggled in ${root}/.reminders.md\n\n${serializeRemindersFile(toggledData)}`,
+                                text: `Reminder toggled\n\n${serializeRemindersFile(toggledData)}`,
                             },
                         ],
                     };
@@ -449,7 +571,7 @@ class ContextServer {
                         content: [
                             {
                                 type: "text",
-                                text: `Reminder removed from ${root}/.reminders.md\n\n${serializeRemindersFile(removedData)}`,
+                                text: `Reminder removed\n\n${serializeRemindersFile(removedData)}`,
                             },
                         ],
                     };

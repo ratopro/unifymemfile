@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
+import { ensureStorageDir, resolveContextPath, resolveRemindersPath, } from "./storage.js";
 const SECTION_ORDER = [
     "summary",
     "currentState",
@@ -19,10 +20,11 @@ const SECTION_LABELS = {
     notes: "Notes",
 };
 export function contextFileExists(projectRoot) {
-    return fs.existsSync(path.join(projectRoot, ".context.md"));
+    const paths = [path.join(projectRoot, ".unifymemfile", "context.md"), path.join(projectRoot, ".context.md")];
+    return paths.some((p) => fs.existsSync(p));
 }
 export function readContextFile(projectRoot) {
-    const filePath = path.join(projectRoot, ".context.md");
+    const filePath = resolveContextPath(projectRoot);
     if (!fs.existsSync(filePath)) {
         return { sessions: [] };
     }
@@ -30,9 +32,9 @@ export function readContextFile(projectRoot) {
     return parseContextFile(content);
 }
 export function writeContextFile(projectRoot, data) {
-    const filePath = path.join(projectRoot, ".context.md");
+    const paths = ensureStorageDir(projectRoot);
     const content = serializeContextFile(data);
-    fs.writeFileSync(filePath, content, "utf-8");
+    fs.writeFileSync(paths.context, content, "utf-8");
 }
 export function getEmptyContextData() {
     return { sessions: [] };
@@ -132,7 +134,7 @@ export function parseContextFile(content) {
     return { sessions };
 }
 export function getContextStatus(projectRoot) {
-    const filePath = path.join(projectRoot, ".context.md");
+    const filePath = resolveContextPath(projectRoot);
     if (!fs.existsSync(filePath)) {
         return { exists: false, path: filePath };
     }
@@ -148,10 +150,11 @@ export function getContextStatus(projectRoot) {
     };
 }
 export function remindersFileExists(projectRoot) {
-    return fs.existsSync(path.join(projectRoot, ".reminders.md"));
+    const paths = [path.join(projectRoot, ".unifymemfile", "reminders.md"), path.join(projectRoot, ".reminders.md")];
+    return paths.some((p) => fs.existsSync(p));
 }
 export function readRemindersFile(projectRoot) {
-    const filePath = path.join(projectRoot, ".reminders.md");
+    const filePath = resolveRemindersPath(projectRoot);
     if (!fs.existsSync(filePath)) {
         return { items: [] };
     }
@@ -159,9 +162,9 @@ export function readRemindersFile(projectRoot) {
     return parseRemindersFile(content);
 }
 export function writeRemindersFile(projectRoot, data) {
-    const filePath = path.join(projectRoot, ".reminders.md");
+    const paths = ensureStorageDir(projectRoot);
     const content = serializeRemindersFile(data);
-    fs.writeFileSync(filePath, content, "utf-8");
+    fs.writeFileSync(paths.reminders, content, "utf-8");
 }
 export function serializeRemindersFile(data) {
     let result = "# Reminders\n\n";
@@ -219,4 +222,52 @@ export function removeReminder(projectRoot, id) {
     data.items = data.items.filter((i) => i.id !== id);
     writeRemindersFile(projectRoot, data);
     return data;
+}
+export function generateCompactContext(root, reminders) {
+    const data = readContextFile(root);
+    if (data.sessions.length === 0) {
+        return "# Project Context\n\n_No sessions recorded yet_\n";
+    }
+    const latest = data.sessions[0];
+    let result = "# Project Context\n\n";
+    if (latest.currentState?.trim()) {
+        result += `## Current State\n\n${latest.currentState}\n\n`;
+    }
+    if (latest.summary?.trim()) {
+        result += `## Summary\n\n${latest.summary}\n\n`;
+    }
+    if (latest.decisions?.trim()) {
+        result += `## Key Decisions\n\n${latest.decisions}\n\n`;
+    }
+    const tasks = data.sessions
+        .filter((s) => s.openTasks?.trim())
+        .flatMap((s) => s.openTasks
+        .split("\n")
+        .filter((l) => l.trim())
+        .map((l) => `- [${s.date}] ${l.trim()}`));
+    if (tasks.length > 0) {
+        result += `## Open Tasks\n\n${tasks.join("\n")}\n\n`;
+    }
+    if (latest.knownIssues?.trim()) {
+        result += `## Known Issues\n\n${latest.knownIssues}\n\n`;
+    }
+    const recent = data.sessions.slice(0, 5);
+    if (recent.length > 1) {
+        result += `## Recent Sessions\n\n`;
+        result +=
+            recent
+                .map((s, i) => {
+                const preview = s.summary?.substring(0, 60) ?? "(no summary)";
+                return `${i + 1}. [${s.date}] ${preview}${s.summary?.length > 60 ? "..." : ""}`;
+            })
+                .join("\n") + "\n\n";
+    }
+    if (latest.notes?.trim()) {
+        const notes = latest.notes.length > 500 ? latest.notes.substring(0, 500) + "..." : latest.notes;
+        result += `## Notes\n\n${notes}\n\n`;
+    }
+    if (reminders?.trim() && reminders !== "# Reminders\n\n_No reminders yet_\n") {
+        result += `## Reminders\n\n${reminders}\n\n`;
+    }
+    return result.trim() + "\n";
 }

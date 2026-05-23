@@ -44,3 +44,4 @@ export declare function generateReminderId(text: string): string;
 export declare function addReminder(projectRoot: string, text: string): RemindersData;
 export declare function toggleReminder(projectRoot: string, id: string): RemindersData;
 export declare function removeReminder(projectRoot: string, id: string): RemindersData;
+export declare function generateCompactContext(root: string, reminders?: string): string;

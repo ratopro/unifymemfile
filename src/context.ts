@@ -9,6 +9,7 @@ import {
   ContextData,
   SessionData,
 } from "./markdown.js";
+import { ensureStorageDir } from "./storage.js";
 
 export interface SaveContextOptions {
   projectRoot?: string;
@@ -43,7 +44,11 @@ export async function saveContext(
       !fs.existsSync(path.join(root, "package.json")) &&
       !fs.existsSync(path.join(root, "pyproject.toml")) &&
       !fs.existsSync(path.join(root, "Cargo.toml")) &&
-      !fs.existsSync(path.join(root, "go.mod"))
+      !fs.existsSync(path.join(root, "go.mod")) &&
+      !fs.existsSync(path.join(root, "composer.json")) &&
+      !fs.existsSync(path.join(root, "pom.xml")) &&
+      !fs.existsSync(path.join(root, "build.gradle")) &&
+      !fs.existsSync(path.join(root, "CMakeLists.txt"))
     ) {
       return {
         success: false,
@@ -51,7 +56,7 @@ export async function saveContext(
       };
     }
 
-    const contextPath = path.join(root, ".context.md");
+    const paths = ensureStorageDir(root);
     const data = contextFileExists(root)
       ? readContextFile(root)
       : { sessions: [] };
@@ -88,7 +93,7 @@ export async function saveContext(
 
     writeContextFile(root, data);
 
-    return { success: true, path: contextPath };
+    return { success: true, path: paths.context };
   } catch (err) {
     return {
       success: false,

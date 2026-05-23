@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { findProjectRoot } from "./project-root.js";
 import { contextFileExists, readContextFile, writeContextFile, generateDateKey, } from "./markdown.js";
+import { ensureStorageDir } from "./storage.js";
 export async function saveContext(options) {
     try {
         const root = options.projectRoot
@@ -18,13 +19,17 @@ export async function saveContext(options) {
             !fs.existsSync(path.join(root, "package.json")) &&
             !fs.existsSync(path.join(root, "pyproject.toml")) &&
             !fs.existsSync(path.join(root, "Cargo.toml")) &&
-            !fs.existsSync(path.join(root, "go.mod"))) {
+            !fs.existsSync(path.join(root, "go.mod")) &&
+            !fs.existsSync(path.join(root, "composer.json")) &&
+            !fs.existsSync(path.join(root, "pom.xml")) &&
+            !fs.existsSync(path.join(root, "build.gradle")) &&
+            !fs.existsSync(path.join(root, "CMakeLists.txt"))) {
             return {
                 success: false,
                 error: `Project root "${root}" does not appear to be a valid project. Provide a valid project root or use --allow-empty-root.`,
             };
         }
-        const contextPath = path.join(root, ".context.md");
+        const paths = ensureStorageDir(root);
         const data = contextFileExists(root)
             ? readContextFile(root)
             : { sessions: [] };
@@ -63,7 +68,7 @@ export async function saveContext(options) {
             data.sessions.unshift(newSession);
         }
         writeContextFile(root, data);
-        return { success: true, path: contextPath };
+        return { success: true, path: paths.context };
     }
     catch (err) {
         return {
